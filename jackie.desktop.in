@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Jackie
+GenericName=JACK Control
+Comment=Jackie is a small JACK Audio Connection Kit Launcher
+Exec=__PREFIX__/bin/jackie
+Icon=__PREFIX__/share/pixmaps/jackie.png
+Categories=Audio;AudioVideo;MIDI;JACK;ALSA;Gtk+;
+Terminal=false
+Type=Application
