@@ -50,19 +50,32 @@ GSList* jk_create_default_config(void) {
 	return progs;
 }
 
-/* writes the config to a file */
-void jk_write_config(char* config_path, GSList* progs) {
-	GKeyFile* kf = NULL;
+/* update jackd command line to list of progs */
+void jk_update_jackd_cmdline (GSList* progs, const gchar* cmdline) {
 	GSList* pr;
+
+	for (pr = progs; pr; pr = g_slist_next(pr)) {
+		JkProg* p = (JkProg*)pr->data;
+
+		if (!strcmp(p->name, "jackd")) {
+			g_free(p->cmdline);
+			p->cmdline = g_strdup(cmdline);
+			break;
+		}
+	}
+}
+
+/* writes the config to a file */
+void jk_write_config(const char* config_path, const GSList* progs) {
+	GKeyFile* kf = NULL;
+	const GSList* pr;
 	gchar* data = NULL;
 	gsize len;
 	FILE* fp = NULL;
 
-	pr = progs;
 	kf = g_key_file_new();
 	for (pr = progs; pr; pr = g_slist_next(pr)) {
-		JkProg* p;
-		p = pr->data;
+		JkProg* p = (JkProg*)pr->data;
 		g_key_file_set_value (kf, p->name, "cmdline", p->cmdline);
 		/* append other params here */
 	}

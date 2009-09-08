@@ -61,10 +61,11 @@ int main(int argc, char **argv)
 
 	app_data = (JkAppData*) malloc (sizeof(JkAppData));
 	app_data->config_path = g_build_path ("/", g_get_home_dir(), ".jackie", NULL);
-	app_data->progs = jk_read_config(app_data->config_path); /* must be called before jk_read_jackd_cmdline */
+	app_data->progs = jk_read_config(app_data->config_path); /* must be called first */
 	app_data->jackd_cmdline = jk_read_jackd_cmdline(app_data->config_path);
 	app_data->jackd_pid = (GPid)0;
 	app_data->jackd_error = NULL;
+	app_data->jackd_entry = NULL;
 
 	/* parse cli argument */ 
 	gtk_init(&argc, &argv);
@@ -123,7 +124,7 @@ int main(int argc, char **argv)
 	menu_append_item(right_menu, "Patchbay", G_CALLBACK(menu_item_on_trans), app_data);
 	menu_append_item(right_menu, "Transport", G_CALLBACK(menu_item_on_trans), app_data);
 #endif
-	menu_append_item(right_menu, "Preferences", G_CALLBACK(menu_item_on_edit), app_data);
+	menu_append_item(right_menu, "Preferences", G_CALLBACK(menu_item_on_pref), app_data);
 	menu_append_item(right_menu, "About", G_CALLBACK(menu_item_on_about), app_data);
 	menu_append_item(right_menu, "Quit", G_CALLBACK(menu_item_on_quit), app_data);
 

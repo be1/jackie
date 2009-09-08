@@ -1,11 +1,11 @@
 # vim:ts=4:sw=4:noexpandtab:autoindent
 PRGNAME=jackie
 PREFIX=/usr/local
-SRC=main.c jk.c menu.c about.c callback.c
+SRC=main.c jk.c menu.c about.c callback.c window.c
 CFLAGS=`pkg-config --cflags glib-2.0` `pkg-config --cflags gtk+-2.0`
 LDFLAGS=`pkg-config --libs glib-2.0` `pkg-config --libs gtk+-2.0`
 
-all: $(SRC) *.h
+all:
 	sed -e "s#__PREFIX__#$(DESTDIR)$(PREFIX)#" jackie.desktop.in > jackie.desktop
 	$(CC) -Wall -Wextra -Wfatal-errors -g $(SRC) -o $(PRGNAME) $(CFLAGS) $(LDFLAGS)
 

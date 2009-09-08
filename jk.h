@@ -45,6 +45,8 @@ typedef struct {
 	GtkMenu* right_menu;		/* gtk right menu */
 	GtkMenuItem* startstop;		/* start/stop menu item */
 	GtkStatusIcon* tray_icon;	/* gtk tray icon */
+	GtkWindow* pref_window;		/* gtk preference window */
+	GtkEntry* jackd_entry;		/* command line entry for jackd */
 	gchar tooltip_buffer[BUFSIZ];	/* working copy of tooltip */
 	gchar* jackd_cmdline;		/* pid of jackd process */
 	GPid jackd_pid;			/* pid of jackd process */
@@ -72,6 +74,11 @@ gboolean jk_spawn_jackd(JkAppData* d);
 /* update tooltip */
 gboolean jk_update_tooltip (gpointer app_data);
 
+/* update jackd command line */
+void jk_update_jackd_cmdline (GSList* progs, const gchar* cmdline);
+
+/* write config into file */
+void jk_write_config(const char* config_path, const GSList* progs);
 /* quit application */
 void jk_quit(JkAppData* d);
 #endif

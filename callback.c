@@ -31,6 +31,7 @@
 #include "menu.h"
 #include "about.h"
 #include "version.h"
+#include "window.h"
 
 /* handler for left-button click */
 void tray_icon_on_left_click(GtkStatusIcon* instance, gpointer app_data)
@@ -115,10 +116,46 @@ void menu_item_on_trans(GtkMenuItem* instance, gpointer app_data) {
 	instance = app_data = NULL;
 }
 
-/* handler for the "Edit" menu item */
-void menu_item_on_edit(GtkMenuItem* instance, gpointer app_data) {
-	/* FIXME: open the configuration editor */
-	instance = app_data = NULL;
+/* callback on Preferences window closed */
+void on_pref_close (gpointer app_data) {
+	JkAppData* d = (JkAppData*)app_data;
+	const gchar* text;
+
+	text = gtk_entry_get_text(d->jackd_entry);
+	g_free(d->jackd_cmdline);
+	d->jackd_cmdline = g_strdup(text); /* set jackd command line */
+	jk_update_jackd_cmdline(d->progs, d->jackd_cmdline);
+	/* write it to $HOME/.jackie */
+	jk_write_config(d->config_path, d->progs);
+	gtk_widget_hide(GTK_WIDGET(d->pref_window));
+	gtk_widget_destroy(GTK_WIDGET(d->pref_window));
+}
+/* handler for the "Preference" menu item */
+void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data) {
+	JkAppData* d = (JkAppData*)app_data;
+	GtkHBox* hbox1;
+	GtkVBox* vbox;
+	GtkLabel* jackd_label;
+
+	d->pref_window = window_create("Preferences");
+	vbox = GTK_VBOX(gtk_vbox_new(FALSE, 0));
+	gtk_container_add(GTK_CONTAINER(d->pref_window), GTK_WIDGET(vbox));
+
+	hbox1 = GTK_HBOX(gtk_hbox_new(TRUE, 0));
+	gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hbox1), TRUE, FALSE, 0);
+
+	jackd_label = GTK_LABEL(gtk_label_new("Jackd command line"));
+	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(jackd_label), FALSE, FALSE, 0);
+
+
+	d->jackd_entry = GTK_ENTRY(gtk_entry_new());
+	gtk_entry_set_text(d->jackd_entry, d->jackd_cmdline); /* jackd command line */
+	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(d->jackd_entry), FALSE, FALSE, 0);
+
+	g_signal_connect_swapped(G_OBJECT(d->pref_window), "delete-event", G_CALLBACK(on_pref_close), (gpointer)d);
+
+	gtk_widget_show_all(GTK_WIDGET(d->pref_window));
+	instance = NULL; /* avoid warnings */
 }
 
 /* handler for the "Quit" menu item */

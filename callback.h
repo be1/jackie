@@ -40,7 +40,7 @@ void tray_icon_on_right_click(GtkStatusIcon* instance, guint button, guint activ
 void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data);
 
 /* handler for the "Edit" menu item */
-void menu_item_on_edit(GtkMenuItem* instance, gpointer app_data);
+void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data);
 
 /* handler for the "Patch" menu item */
 void menu_item_on_patch(GtkMenuItem* instance, gpointer app_data);
