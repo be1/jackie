@@ -43,6 +43,7 @@ typedef struct {
 	GSList* progs;			/* configuration list  */
 	GtkMenu* left_menu;		/* gtk left menu */
 	GtkMenu* right_menu;		/* gtk right menu */
+	GtkMenuItem* startstop;		/* start/stop menu item */
 	GtkStatusIcon* tray_icon;	/* gtk tray icon */
 	gchar tooltip_buffer[BUFSIZ];	/* working copy of tooltip */
 	gchar* jackd_cmdline;		/* pid of jackd process */

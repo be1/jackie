@@ -209,8 +209,12 @@ void jk_on_jackd_sigchld(GPid pid, gint status, gpointer app_data) {
 	g_source_remove(d->jackd_chld);
 	g_spawn_close_pid(pid);
 
-	/* FIXME: could handle status code */
-	status = 0;
+	if (status) {
+		/* FIXME: report error: device already used */
+		d->jackd_pid = (GPid)0;
+		gtk_menu_item_set_label(d->startstop, "Start");
+		gtk_status_icon_set_tooltip(d->tray_icon, "Jackd stopped");
+	}
 }
 
 gboolean jk_on_data(GIOChannel* source, GIOCondition condition, gpointer app_data) {

@@ -35,7 +35,7 @@
 GtkMenu* menu_new(void);
 
 /* append an item to the menu, and connect its callback on "activate" event */
-void menu_append_item(GtkMenu* menu, gchar* label, GCallback callback, gpointer cb_data);
+GtkMenuItem* menu_append_item(GtkMenu* menu, gchar* label, GCallback callback, gpointer cb_data);
 
 /* show the menu */
 void menu_show(GtkMenu* menu, guint button, guint activate_time);

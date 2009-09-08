@@ -116,7 +116,7 @@ int main(int argc, char **argv)
                          G_CALLBACK(tray_icon_on_right_click), app_data);
 
 	/* left menu item callbacks */
-	menu_append_item(left_menu, "Start", G_CALLBACK(menu_item_on_start_stop), app_data);
+	app_data->startstop = menu_append_item(left_menu, "Start", G_CALLBACK(menu_item_on_start_stop), app_data);
 
 	/* right menu items callbacks */
 	menu_append_item(right_menu, "Patchbay", G_CALLBACK(menu_item_on_trans), app_data);

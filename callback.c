@@ -62,7 +62,7 @@ void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 
 	/* check if jackd is running */
 	if (d->jackd_pid) { /* stop jackd */
-		kill (d->jackd_pid, 3); /* SIGQUIT */
+		kill (d->jackd_pid, 2); /* SIGINT */
 		d->jackd_pid = (GPid)0;
 		gtk_status_icon_set_tooltip(d->tray_icon, "Jackd Stopped");
 		gtk_menu_item_set_label(instance, "Start");
