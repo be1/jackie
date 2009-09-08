@@ -17,7 +17,7 @@
 
 2009-09-07
 	* changed menu disposition
-	* moved start and stop into one star/stop menu
+	* moved start and stop into one start/stop menu entry
 
 2009-09-06
 	* rewritten configuration parsing
