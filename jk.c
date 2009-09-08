@@ -231,7 +231,7 @@ gboolean jk_on_data(GIOChannel* source, GIOCondition condition, gpointer app_dat
 		if (nread < BUFSIZ)
 			d->tooltip_buffer[nread] = '\0';
 		else d->tooltip_buffer[BUFSIZ-1] = '\0';
-#if 1
+#if 0
 		puts(d->tooltip_buffer);
 #endif
 		/* update tooltip_buffer */

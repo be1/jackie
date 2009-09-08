@@ -119,8 +119,10 @@ int main(int argc, char **argv)
 	app_data->startstop = menu_append_item(left_menu, "Start", G_CALLBACK(menu_item_on_start_stop), app_data);
 
 	/* right menu items callbacks */
+#if 0
 	menu_append_item(right_menu, "Patchbay", G_CALLBACK(menu_item_on_trans), app_data);
 	menu_append_item(right_menu, "Transport", G_CALLBACK(menu_item_on_trans), app_data);
+#endif
 	menu_append_item(right_menu, "Preferences", G_CALLBACK(menu_item_on_edit), app_data);
 	menu_append_item(right_menu, "About", G_CALLBACK(menu_item_on_about), app_data);
 	menu_append_item(right_menu, "Quit", G_CALLBACK(menu_item_on_quit), app_data);
