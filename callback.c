@@ -78,6 +78,7 @@ void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 		p->pid = (GPid)0;
 		gtk_status_icon_set_tooltip(d->tray_icon, "Jackd Stopped");
 		gtk_menu_item_set_label(instance, "Start");
+		g_source_remove(p->timetag);
 		return;
 	}
 
@@ -99,8 +100,10 @@ void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 		gtk_status_icon_set_tooltip(d->tray_icon, "Bad jackd command line");
 		p->pid = (GPid)0;
 	} else {
+		p = (JkProg*)pr->data;
 		gtk_status_icon_set_tooltip(d->tray_icon, "Jackd started");
 		gtk_menu_item_set_label(instance, "Stop");
+		p->timetag = g_timeout_add_seconds(1, jk_update_tooltip, app_data);
 	}
 }
 

@@ -146,6 +146,21 @@ void jk_quit(JkAppData* d) {
 	gtk_main_quit();
 }
 
+/* update jackie tooltip with jackd messages */
+gboolean jk_update_tooltip(gpointer app_data) {
+	JkAppData* d = (JkAppData*) app_data;
+	GSList* prog = NULL;
+	JkProg* pr = NULL;
+
+	for (prog = d->progs; prog; prog = g_slist_next(prog)) {
+		pr = (JkProg*)prog->data;
+		if (!strcmp(pr->name, "jackd") && strlen(pr->buf)) {
+			gtk_status_icon_set_tooltip (d->tray_icon, pr->buf);
+			break;
+		}
+	}
+	return TRUE;
+}
 /* watch return of a program */
 void jk_on_sigchld(GPid pid, gint status, gpointer prog) {
 	JkProg* pr = (JkProg*)prog;
@@ -153,20 +168,38 @@ void jk_on_sigchld(GPid pid, gint status, gpointer prog) {
 	close(pr->in);
 	close(pr->out);
 	close(pr->err);
+	g_source_remove(pr->fdtag);
+	g_source_remove(pr->chldtag);
 	g_spawn_close_pid(pid);
 
 	/* FIXME: could handle status code */
 	status = 0;
 }
 
+gboolean jk_on_data(GIOChannel* source, GIOCondition condition, gpointer prog) {
+	JkProg* pr = (JkProg*)prog;
+	gint fd;
+
+	fd = g_io_channel_unix_get_fd(source);
+	if (condition == G_IO_IN) {
+		ssize_t nread;
+
+		nread = read(pr->out, pr->buf, BUFSIZ);
+		if (nread < BUFSIZ)
+			pr->buf[nread] = '\0';
+		else pr->buf[BUFSIZ-1] = '\0';
+	}
+	return TRUE;
+}
+
 /* spawn a external program */
 gboolean jk_spawn_prog(JkProg* prog)
 {
 	gboolean ret; /* spawn success */
-	guint tag; /* child watcher source tag */
 	gchar** argv = NULL;
+	GIOChannel* out = NULL;
 
-	argv = g_strsplit(prog->cmdline, " ",0);
+	argv = g_strsplit(prog->cmdline, " ", 0);
 	/* FIXME: set any working directory ? ($HOME or /tmp) */
 	ret = g_spawn_async_with_pipes
 		(NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, 
@@ -178,10 +211,11 @@ gboolean jk_spawn_prog(JkProg* prog)
 	}
 	g_strfreev(argv);
 	/* set the child watcher */
-	tag = g_child_watch_add (prog->pid, jk_on_sigchld, prog);
-
-	/* WARN: when to use g_source_remove (tag) ? */
-	/* maybe GLib use it before the callback */
-
+	prog->chldtag = g_child_watch_add (prog->pid, jk_on_sigchld, prog);
+	/* set fd watcher if this is jackd */
+	if (!strcmp(prog->name, "jackd")) {
+		out = g_io_channel_unix_new(prog->out);
+		prog->fdtag = g_io_add_watch(out, G_IO_IN, jk_on_data, prog);
+	}
 	return ret;
 }

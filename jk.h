@@ -29,6 +29,7 @@
 #ifndef _JK_H
 #define _JK_H
 #include <gtk/gtk.h>
+#include <stdio.h>
 
 typedef struct {
 	gchar* name;		/* prog name (key) */
@@ -38,7 +39,11 @@ typedef struct {
 	gint out;		/* process stdout */
 	gint err;		/* process stderr */
 	gint ret;		/* process return */
+	gchar buf[BUFSIZ];	/* buffer copy of out */
 	GError* error;		/* GLib error details */
+	guint timetag;		/* GLib source id for timeout watch */
+	guint chldtag;		/* GLib source id for child watch */
+	guint fdtag;		/* GLib source id for file watch */
 } JkProg;
 
 /* data to pass to the callbacks */
@@ -58,6 +63,9 @@ void jk_delete_progs(GSList* config);
 
 /* spawn a program */
 gboolean jk_spawn_prog(JkProg* prog);
+
+/* update tooltip */
+gboolean jk_update_tooltip (gpointer app_data);
 
 /* quit application */
 void jk_quit(JkAppData* d);
