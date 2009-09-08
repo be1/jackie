@@ -235,7 +235,8 @@ gboolean jk_on_data(GIOChannel* source, GIOCondition condition, gpointer app_dat
 		puts(d->tooltip_buffer);
 #endif
 		/* update tooltip_buffer */
-		if (g_regex_match_simple(".*xrun.*", d->tooltip_buffer, 0, 0)) {
+		if (g_regex_match_simple(".*xrun.*", d->tooltip_buffer, 0, 0) /* ALSA */
+		|| g_regex_match_simple(".*delay of.*restart.*", d->tooltip_buffer, 0, 0)) { /* OSS */
 			snprintf(d->tooltip_buffer, BUFSIZ, "Jackd xruns: %d", ++xrun);
 			gtk_status_icon_set_tooltip (d->tray_icon, d->tooltip_buffer);
 		}
