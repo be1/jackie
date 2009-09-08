@@ -155,7 +155,7 @@ gboolean jk_update_tooltip(gpointer app_data) {
 	for (prog = d->progs; prog; prog = g_slist_next(prog)) {
 		pr = (JkProg*)prog->data;
 		if (!strcmp(pr->name, "jackd") && strlen(pr->buf)) {
-			gtk_status_icon_set_tooltip (d->tray_icon, pr->buf);
+			gtk_status_icon_set_tooltip (d->tray_icon, g_strstrip(pr->buf));
 			break;
 		}
 	}
