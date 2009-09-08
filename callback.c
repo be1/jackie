@@ -58,52 +58,30 @@ void tray_icon_on_right_click(GtkStatusIcon* instance, guint button, guint activ
 void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 {
 	JkAppData* d = (JkAppData*) app_data;
-	GSList* pr;
 	gboolean ret;
-	JkProg* p;
 
-	for (pr = d->progs; pr; pr = g_slist_next(pr)) {
-		p = (JkProg*)pr->data;
-		if (!g_strcmp0("jackd",p->name))
-			break;
-	}
-	if (!pr) { /* jackd group not found */
-		gtk_status_icon_set_tooltip(d->tray_icon, "Missing jackd in configuration");
-		return;
-	}
-	p = (JkProg*)pr->data;
 	/* check if jackd is running */
-	if (p->pid) { /* stop jackd */
-		kill (p->pid, 3); /* SIGQUIT */
-		p->pid = (GPid)0;
+	if (d->jackd_pid) { /* stop jackd */
+		kill (d->jackd_pid, 3); /* SIGQUIT */
+		d->jackd_pid = (GPid)0;
 		gtk_status_icon_set_tooltip(d->tray_icon, "Jackd Stopped");
 		gtk_menu_item_set_label(instance, "Start");
-		g_source_remove(p->timetag);
 		return;
 	}
 
 	/* else reload config then start jackd */
-	jk_delete_progs(d->progs);
-	d->progs = jk_read_config(d->config_path);
-	for (pr = d->progs; pr; pr = g_slist_next(pr)) {
-		p = (JkProg*)pr->data;
-		if (!g_strcmp0("jackd",p->name))
-			break;
-	}
-	if (!pr) { /* jackd group not found */
+	d->jackd_cmdline = jk_read_jackd_cmdline(d->config_path);
+	if (!d->jackd_cmdline) { /* jackd group not found */
 		gtk_status_icon_set_tooltip(d->tray_icon, "Missing jackd in configuration");
 		return;
 	}
-	p = (JkProg*)pr->data;
-	ret = jk_spawn_prog(p); /* start jackd */
+	ret = jk_spawn_jackd(d); /* start jackd */
 	if (ret == FALSE) { /* bad commandline */
 		gtk_status_icon_set_tooltip(d->tray_icon, "Bad jackd command line");
-		p->pid = (GPid)0;
+		d->jackd_pid = (GPid)0;
 	} else {
-		p = (JkProg*)pr->data;
 		gtk_status_icon_set_tooltip(d->tray_icon, "Jackd started");
 		gtk_menu_item_set_label(instance, "Stop");
-		p->timetag = g_timeout_add_seconds(1, jk_update_tooltip, app_data);
 	}
 }
 

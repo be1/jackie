@@ -34,26 +34,30 @@
 typedef struct {
 	gchar* name;		/* prog name (key) */
 	gchar* cmdline;		/* commandline (value) */
-	GPid pid;		/* pid of process */
-	gint in;		/* process stdin */
-	gint out;		/* process stdout */
-	gint err;		/* process stderr */
-	gint ret;		/* process return */
-	gchar buf[BUFSIZ];	/* buffer copy of out */
 	GError* error;		/* GLib error details */
-	guint timetag;		/* GLib source id for timeout watch */
-	guint chldtag;		/* GLib source id for child watch */
-	guint fdtag;		/* GLib source id for file watch */
 } JkProg;
 
 /* data to pass to the callbacks */
 typedef struct {
 	gchar* config_path;		/* configuration path */
-	GSList* progs;		/* configuration structure  */
+	GSList* progs;			/* configuration list  */
 	GtkMenu* left_menu;		/* gtk left menu */
 	GtkMenu* right_menu;		/* gtk right menu */
 	GtkStatusIcon* tray_icon;	/* gtk tray icon */
+	gchar tooltip_buffer[BUFSIZ];	/* working copy of tooltip */
+	gchar* jackd_cmdline;		/* pid of jackd process */
+	GPid jackd_pid;			/* pid of jackd process */
+	gint jackd_in;			/* process stdin */
+	gint jackd_out;			/* process stdout */
+	gint jackd_err;			/* process stderr */
+	gint jackd_ret;			/* process return */
+	guint jackd_chld;		/* GLib source id for child watch */
+	guint jackd_fd;			/* GLib source id for file watch */
+	GError* jackd_error;		/* GLib error details */
 } JkAppData;
+
+/* creates jackd command line given the config file */
+gchar* jk_read_jackd_cmdline(gchar* config_path);
 
 /* creates a JkConfig given the config file */
 GSList* jk_read_config (gchar* config_path);
@@ -61,8 +65,8 @@ GSList* jk_read_config (gchar* config_path);
 /* deletes a JkConfig */
 void jk_delete_progs(GSList* config);
 
-/* spawn a program */
-gboolean jk_spawn_prog(JkProg* prog);
+/* spawn jackd */
+gboolean jk_spawn_jackd(JkAppData* d);
 
 /* update tooltip */
 gboolean jk_update_tooltip (gpointer app_data);

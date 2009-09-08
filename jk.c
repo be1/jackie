@@ -74,6 +74,55 @@ void jk_write_config(char* config_path, GSList* progs) {
 	g_free(data);
 }
 
+gchar* jk_read_jackd_cmdline(gchar* config_path) {
+	GKeyFile* kf = NULL;
+	GError* error = NULL;
+	gchar* cmdline;
+	gchar** keys = NULL;
+	gchar** groups = NULL;
+	gchar* val;
+	gsize glen, klen, i, j;
+
+	kf = g_key_file_new();
+	g_key_file_load_from_file(kf, config_path, G_KEY_FILE_NONE, &error);
+	if(error) {
+		GSList* progs = NULL;
+		progs = jk_create_default_config();
+		jk_write_config(config_path, progs);
+		g_error_free(error);
+		jk_delete_progs(progs);
+		error = NULL;
+		g_key_file_load_from_file(kf, config_path, G_KEY_FILE_NONE, &error);
+	}
+	groups = g_key_file_get_groups(kf, &glen);
+	for (i = 0; i < glen; ++i) {
+		if (strcmp(groups[i], "jackd"))
+			continue; /* pass if this is not about jackd */
+		keys = g_key_file_get_keys(kf, groups[i], &klen, &error);
+		if(error) {
+			g_warning("jk_read_jackd_cmdline: %s\n", error->message);
+			g_error_free(error);
+			error = NULL;
+		} else for (j = 0; j < klen; ++j) {
+			val = g_key_file_get_value (kf, groups[i], keys[j], &error);
+			if(error) {
+				g_warning("jk_read_cmdline: %s\n", error->message);
+				g_error_free(error);
+				error = NULL;
+			}
+			/* return cmdline */
+			if (!strcmp(keys [j], "cmdline")) {
+				cmdline = g_strdup(val);
+			}
+			/* append other params here */
+		}
+	}
+	g_strfreev(groups);
+	g_strfreev(keys);
+	g_key_file_free(kf);
+	return cmdline;
+}
+
 /* creates a list of JkProgs given the config file */
 GSList* jk_read_config (gchar* config_path) {
 	GSList* progs = NULL;
@@ -97,6 +146,9 @@ GSList* jk_read_config (gchar* config_path) {
 	for (i = 0; i < glen; ++i) {
 		JkProg* p;
 
+		/* do not store jackd here */
+		if (!strcmp(groups[i], "jackd"))
+				continue;
 		keys = g_key_file_get_keys(kf, groups[i], &klen, &error);
 		if(error) {
 			g_warning("jk_read_config: %s\n", error->message);
@@ -109,13 +161,13 @@ GSList* jk_read_config (gchar* config_path) {
 				g_error_free(error);
 				error = NULL;
 			}
+			/* store config */
 			p = (JkProg*) malloc(sizeof(JkProg));
 			p->name = g_strdup(groups[i]);
 			if (!strcmp(keys [j], "cmdline")) {
 				p->cmdline = val;
 			}
 			p->error = NULL;
-			p->pid = (GPid)0;
 			/* append other params here */
 		}
 		progs = g_slist_append(progs, (gpointer)p);
@@ -146,76 +198,69 @@ void jk_quit(JkAppData* d) {
 	gtk_main_quit();
 }
 
-/* update jackie tooltip with jackd messages */
-gboolean jk_update_tooltip(gpointer app_data) {
-	JkAppData* d = (JkAppData*) app_data;
-	GSList* prog = NULL;
-	JkProg* pr = NULL;
-
-	for (prog = d->progs; prog; prog = g_slist_next(prog)) {
-		pr = (JkProg*)prog->data;
-		if (!strcmp(pr->name, "jackd") && strlen(pr->buf)) {
-			gtk_status_icon_set_tooltip (d->tray_icon, g_strstrip(pr->buf));
-			break;
-		}
-	}
-	return TRUE;
-}
 /* watch return of a program */
-void jk_on_sigchld(GPid pid, gint status, gpointer prog) {
-	JkProg* pr = (JkProg*)prog;
+void jk_on_jackd_sigchld(GPid pid, gint status, gpointer app_data) {
+	JkAppData* d = (JkAppData*)app_data;
 
-	close(pr->in);
-	close(pr->out);
-	close(pr->err);
-	g_source_remove(pr->fdtag);
-	g_source_remove(pr->chldtag);
+	close(d->jackd_in);
+	close(d->jackd_out);
+	close(d->jackd_err);
+	g_source_remove(d->jackd_fd);
+	g_source_remove(d->jackd_chld);
 	g_spawn_close_pid(pid);
 
 	/* FIXME: could handle status code */
 	status = 0;
 }
 
-gboolean jk_on_data(GIOChannel* source, GIOCondition condition, gpointer prog) {
-	JkProg* pr = (JkProg*)prog;
+gboolean jk_on_data(GIOChannel* source, GIOCondition condition, gpointer app_data) {
+	JkAppData* d = (JkAppData*) app_data;
 	gint fd;
+	static guint xrun = 0;
 
 	fd = g_io_channel_unix_get_fd(source);
 	if (condition == G_IO_IN) {
 		ssize_t nread;
 
-		nread = read(pr->out, pr->buf, BUFSIZ);
+		/* read jackd messages */
+		nread = read(fd, d->tooltip_buffer, BUFSIZ);
 		if (nread < BUFSIZ)
-			pr->buf[nread] = '\0';
-		else pr->buf[BUFSIZ-1] = '\0';
+			d->tooltip_buffer[nread] = '\0';
+		else d->tooltip_buffer[BUFSIZ-1] = '\0';
+#if 1
+		puts(d->tooltip_buffer);
+#endif
+		/* update tooltip_buffer */
+		if (g_regex_match_simple(".*xrun.*", d->tooltip_buffer, 0, 0)) {
+			snprintf(d->tooltip_buffer, BUFSIZ, "Jackd xruns: %d", ++xrun);
+			gtk_status_icon_set_tooltip (d->tray_icon, d->tooltip_buffer);
+		}
 	}
 	return TRUE;
 }
 
 /* spawn a external program */
-gboolean jk_spawn_prog(JkProg* prog)
+gboolean jk_spawn_jackd(JkAppData* d)
 {
 	gboolean ret; /* spawn success */
 	gchar** argv = NULL;
 	GIOChannel* out = NULL;
-
-	argv = g_strsplit(prog->cmdline, " ", 0);
+	
+	argv = g_strsplit(d->jackd_cmdline, " ", 0);
 	/* FIXME: set any working directory ? ($HOME or /tmp) */
 	ret = g_spawn_async_with_pipes
 		(NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, 
-		&prog->pid, &prog->in, &prog->out, &prog->err, &prog->error);
+		&d->jackd_pid, &d->jackd_in, &d->jackd_out, &d->jackd_err, &d->jackd_error);
 	if(ret == FALSE) {
-		g_warning("jk_spawn_prog: %s\n", prog->error->message);
-		g_error_free(prog->error);
-		prog->error=NULL;
+		g_warning("jk_spawn_jackd: %s\n", d->jackd_error->message);
+		g_error_free(d->jackd_error);
+		d->jackd_error=NULL;
 	}
 	g_strfreev(argv);
 	/* set the child watcher */
-	prog->chldtag = g_child_watch_add (prog->pid, jk_on_sigchld, prog);
+	d->jackd_chld = g_child_watch_add (d->jackd_pid, jk_on_jackd_sigchld, d);
 	/* set fd watcher if this is jackd */
-	if (!strcmp(prog->name, "jackd")) {
-		out = g_io_channel_unix_new(prog->out);
-		prog->fdtag = g_io_add_watch(out, G_IO_IN, jk_on_data, prog);
-	}
+	out = g_io_channel_unix_new(d->jackd_out);
+	d->jackd_fd = g_io_add_watch(out, G_IO_IN, jk_on_data, d);
 	return ret;
 }

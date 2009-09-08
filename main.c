@@ -42,7 +42,7 @@
 /* cli usage message */
 void usage(char* prog, int exitcode) {
 	fprintf(stderr, "%s version %s\n", PROG_NAME, PROG_VERSION);
-	fprintf(stderr, "Usage: %s [-v|h]\n", basename(prog));
+	fprintf(stderr, "Usage: %s\n", basename(prog));
 	exit(exitcode);
 }
 
@@ -61,7 +61,10 @@ int main(int argc, char **argv)
 
 	app_data = (JkAppData*) malloc (sizeof(JkAppData));
 	app_data->config_path = g_build_path ("/", g_get_home_dir(), ".jackie", NULL);
-	app_data->progs = jk_read_config(app_data->config_path);
+	app_data->progs = jk_read_config(app_data->config_path); /* must be called before jk_read_jackd_cmdline */
+	app_data->jackd_cmdline = jk_read_jackd_cmdline(app_data->config_path);
+	app_data->jackd_pid = (GPid)0;
+	app_data->jackd_error = NULL;
 
 	/* parse cli argument */ 
 	gtk_init(&argc, &argv);
