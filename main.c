@@ -66,6 +66,7 @@ int main(int argc, char **argv)
 	app_data->jackd_pid = (GPid)0;
 	app_data->jackd_error = NULL;
 	app_data->jackd_entry = NULL;
+	app_data->pref_window = NULL;
 
 	/* parse cli argument */ 
 	gtk_init(&argc, &argv);

@@ -129,6 +129,7 @@ void on_pref_close (gpointer app_data) {
 	jk_write_config(d->config_path, d->progs);
 	gtk_widget_hide(GTK_WIDGET(d->pref_window));
 	gtk_widget_destroy(GTK_WIDGET(d->pref_window));
+	d->pref_window = NULL;
 }
 /* handler for the "Preference" menu item */
 void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data) {

@@ -90,7 +90,7 @@ void jk_write_config(const char* config_path, const GSList* progs) {
 gchar* jk_read_jackd_cmdline(gchar* config_path) {
 	GKeyFile* kf = NULL;
 	GError* error = NULL;
-	gchar* cmdline;
+	gchar* cmdline = NULL;
 	gchar** keys = NULL;
 	gchar** groups = NULL;
 	gchar* val;
@@ -133,6 +133,10 @@ gchar* jk_read_jackd_cmdline(gchar* config_path) {
 	g_strfreev(groups);
 	g_strfreev(keys);
 	g_key_file_free(kf);
+	/* defaults */
+	if (!cmdline)
+		cmdline = g_strdup("/usr/bin/jackd -R -d alsa");
+	/* other defaults here */
 	return cmdline;
 }
 
