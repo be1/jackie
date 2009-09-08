@@ -17,6 +17,7 @@ install:
 uninstall:
 	$(RM) $(DESTDIR)$(PREFIX)/bin/$(PRGNAME)
 	$(RM) $(DESTDIR)$(PREFIX)/share/applications/$(PRGNAME).desktop
+	$(RM) $(DESTDIR)$(PREFIX)/share/icons/$(PRGNAME).png 
 
 clean:
 	$(RM) $(PRGNAME) $(PRGNAME).desktop

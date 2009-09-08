@@ -171,7 +171,7 @@ gboolean jk_spawn_prog(JkProg* prog)
 	ret = g_spawn_async_with_pipes
 		(NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, 
 		&prog->pid, &prog->in, &prog->out, &prog->err, &prog->error);
-	if(prog->error) {
+	if(ret == FALSE) {
 		g_warning("jk_spawn_prog: %s\n", prog->error->message);
 		g_error_free(prog->error);
 		prog->error=NULL;

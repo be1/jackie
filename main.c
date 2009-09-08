@@ -52,7 +52,10 @@ int main(int argc, char **argv)
 	GtkStatusIcon* tray_icon = NULL;	/* system tray icon object */
 	GtkMenu* left_menu = NULL;		/* left-click menu */
 	GtkMenu* right_menu = NULL;		/* right-click menu */
-	JkAppData* app_data;			/* data to pass to callbacks */
+	JkAppData* app_data = NULL;		/* data to pass to callbacks */
+	const gchar* const * data_dirs;		/* dirs list for finding icons, etc... */
+	gchar* icon_path = NULL;
+	int i;
 
 	/* set $HOME/.jackie.ini s config file */
 
@@ -82,9 +85,20 @@ int main(int argc, char **argv)
         tray_icon = gtk_status_icon_new();
 	app_data->tray_icon = tray_icon;
 	/* systray visible icon */
-        gtk_status_icon_set_from_file(tray_icon, "jackie.png"); /* FIXME: use path given from Makefile */
-	/* default wm icon (for subsequent windows) */
-        gtk_window_set_default_icon_from_file("jackie.png", NULL); /* FIXME: _ */
+	data_dirs = g_get_system_data_dirs();
+	for (i = 0; data_dirs[i]; ++i) {
+		icon_path = g_strconcat(data_dirs[i],"icons/jackie.png", NULL);
+		if (!access(icon_path,F_OK)) {
+			break;
+		}
+		g_free(icon_path);
+		icon_path = NULL;
+	}
+	if (icon_path) {
+	        gtk_status_icon_set_from_file(tray_icon, icon_path);
+		/* default wm icon (for subsequent windows) */
+	        gtk_window_set_default_icon_from_file(icon_path, NULL);
+	}
 	/* default tooltip */
         gtk_status_icon_set_tooltip(tray_icon, "jackie");
 	/* set the icon visible */
