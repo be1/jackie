@@ -84,6 +84,7 @@ int main(int argc, char **argv)
 	/* create the tray icon */
         tray_icon = gtk_status_icon_new();
 	app_data->tray_icon = tray_icon;
+
 	/* systray visible icon */
 	data_dirs = g_get_system_data_dirs();
 	for (i = 0; data_dirs[i]; ++i) {
@@ -98,6 +99,7 @@ int main(int argc, char **argv)
 	        gtk_status_icon_set_from_file(tray_icon, icon_path);
 		/* default wm icon (for subsequent windows) */
 	        gtk_window_set_default_icon_from_file(icon_path, NULL);
+		g_free(icon_path);
 	}
 	/* default tooltip */
         gtk_status_icon_set_tooltip(tray_icon, "jackie");
