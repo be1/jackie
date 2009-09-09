@@ -71,7 +71,7 @@ void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 	}
 
 	/* else reload config then start jackd */
-	d->jackd_cmdline = jk_read_jackd_cmdline(d->config_path);
+	d->jackd_cmdline = jk_read_cmdline("jackd", d->config_path);
 	if (!d->jackd_cmdline) { /* jackd group not found */
 		gtk_status_icon_set_tooltip(d->tray_icon, "Missing jackd in configuration");
 		return;
@@ -104,13 +104,20 @@ void menu_item_on_about(GtkMenuItem* instance, gpointer unused)
 	return;
 }
 
-/* handler for the "Patch" menu item */
+/* handler for the "Patchbay" menu item */
 void menu_item_on_patch(GtkMenuItem* instance, gpointer app_data) {
-	/* FIXME: launch patchbay */
-	instance = app_data = NULL;
+	JkAppData* d = (JkAppData*)app_data;
+	gboolean ret;
+
+	d->patchbay_cmdline = jk_read_cmdline("patchbay", d->config_path);
+	ret = jk_spawn_application(d, "patchbay");
+	if (ret == FALSE)
+		gtk_status_icon_set_tooltip(d->tray_icon, "Failed to launch application");
+		
+	instance = NULL;
 }
 
-/* handler for the "Trans" menu item */
+/* handler for the "Transport" menu item */
 void menu_item_on_trans(GtkMenuItem* instance, gpointer app_data) {
 	/* FIXME: launch transport control */
 	instance = app_data = NULL;
@@ -124,7 +131,11 @@ void on_pref_close (gpointer app_data) {
 	text = gtk_entry_get_text(d->jackd_entry);
 	g_free(d->jackd_cmdline);
 	d->jackd_cmdline = g_strdup(text); /* set jackd command line */
-	jk_update_jackd_cmdline(d->progs, d->jackd_cmdline);
+	jk_update_cmdline(d->progs, "jackd", d->jackd_cmdline);
+	text = gtk_entry_get_text(d->patchbay_entry);
+	g_free(d->patchbay_cmdline);
+	d->patchbay_cmdline = g_strdup(text); /* set patchbay command line */
+	jk_update_cmdline(d->progs, "patchbay", d->patchbay_cmdline);
 	/* write it to $HOME/.jackie */
 	jk_write_config(d->config_path, d->progs);
 	gtk_widget_hide(GTK_WIDGET(d->pref_window));
@@ -134,9 +145,11 @@ void on_pref_close (gpointer app_data) {
 /* handler for the "Preference" menu item */
 void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data) {
 	JkAppData* d = (JkAppData*)app_data;
-	GtkHBox* hbox1;
 	GtkVBox* vbox;
+	GtkHBox* hbox1;
+	GtkHBox* hbox2;
 	GtkLabel* jackd_label;
+	GtkLabel* patchbay_label;
 
 	d->pref_window = window_create("Preferences");
 	vbox = GTK_VBOX(gtk_vbox_new(FALSE, 0));
@@ -145,14 +158,21 @@ void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data) {
 	hbox1 = GTK_HBOX(gtk_hbox_new(TRUE, 0));
 	gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hbox1), TRUE, FALSE, 0);
 
+	hbox2 = GTK_HBOX(gtk_hbox_new(TRUE, 0));
+	gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hbox2), TRUE, FALSE, 0);
+
 	jackd_label = GTK_LABEL(gtk_label_new("Jackd command line"));
 	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(jackd_label), FALSE, FALSE, 0);
-
+	patchbay_label = GTK_LABEL(gtk_label_new("patchbay command line"));
+	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(patchbay_label), FALSE, FALSE, 0);
 
 	d->jackd_entry = GTK_ENTRY(gtk_entry_new());
 	gtk_entry_set_text(d->jackd_entry, d->jackd_cmdline); /* jackd command line */
 	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(d->jackd_entry), FALSE, FALSE, 0);
-
+	d->patchbay_entry = GTK_ENTRY(gtk_entry_new());
+	gtk_entry_set_text(d->patchbay_entry, d->patchbay_cmdline); /* patchbay command line */
+	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(d->patchbay_entry), FALSE, FALSE, 0);
+	
 	g_signal_connect_swapped(G_OBJECT(d->pref_window), "delete-event", G_CALLBACK(on_pref_close), (gpointer)d);
 
 	gtk_widget_show_all(GTK_WIDGET(d->pref_window));

@@ -47,8 +47,10 @@ typedef struct {
 	GtkStatusIcon* tray_icon;	/* gtk tray icon */
 	GtkWindow* pref_window;		/* gtk preference window */
 	GtkEntry* jackd_entry;		/* command line entry for jackd */
+	GtkEntry* patchbay_entry;	/* command line entry for patchbay */
 	gchar tooltip_buffer[BUFSIZ];	/* working copy of tooltip */
-	gchar* jackd_cmdline;		/* pid of jackd process */
+	gchar* jackd_cmdline;		/* command_line text for jackd */
+	gchar* patchbay_cmdline;	/* command_line text for patchbay */
 	GPid jackd_pid;			/* pid of jackd process */
 	gint jackd_in;			/* process stdin */
 	gint jackd_out;			/* process stdout */
@@ -60,13 +62,16 @@ typedef struct {
 } JkAppData;
 
 /* creates jackd command line given the config file */
-gchar* jk_read_jackd_cmdline(gchar* config_path);
+gchar* jk_read_cmdline(const gchar* name, gchar* config_path);
 
 /* creates a JkConfig given the config file */
 GSList* jk_read_config (gchar* config_path);
 
 /* deletes a JkConfig */
 void jk_delete_progs(GSList* config);
+
+/* spawn application */
+gboolean jk_spawn_application(JkAppData* d, const char* name);
 
 /* spawn jackd */
 gboolean jk_spawn_jackd(JkAppData* d);
@@ -75,10 +80,11 @@ gboolean jk_spawn_jackd(JkAppData* d);
 gboolean jk_update_tooltip (gpointer app_data);
 
 /* update jackd command line */
-void jk_update_jackd_cmdline (GSList* progs, const gchar* cmdline);
+void jk_update_cmdline (GSList* progs, const gchar* name, const gchar* cmdline);
 
 /* write config into file */
 void jk_write_config(const char* config_path, const GSList* progs);
+
 /* quit application */
 void jk_quit(JkAppData* d);
 #endif
