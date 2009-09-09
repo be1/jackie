@@ -256,7 +256,8 @@ gboolean jk_on_data(GIOChannel* source, GIOCondition condition, gpointer app_dat
 		|| g_regex_match_simple(".*delay of.*restart.*", d->tooltip_buffer, 0, 0)) { /* OSS */
 			snprintf(d->tooltip_buffer, BUFSIZ, "Jackd xruns: %d", ++xrun);
 			gtk_status_icon_set_tooltip (d->tray_icon, d->tooltip_buffer);
-		}
+		} else if (g_regex_match_simple("^jack main caught signal.*$", d->tooltip_buffer, 0, 0)) /* stopped */
+			xrun = 0; /* reset xruns */
 	}
 	return TRUE;
 }
