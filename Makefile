@@ -20,4 +20,4 @@ uninstall:
 	$(RM) $(DESTDIR)$(PREFIX)/share/icons/$(PRGNAME).png 
 
 clean:
-	$(RM) $(PRGNAME) $(PRGNAME).desktop
+	$(RM) $(PRGNAME) $(PRGNAME).desktop *~

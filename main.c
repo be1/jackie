@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 	/* systray visible icon */
 	data_dirs = g_get_system_data_dirs();
 	for (i = 0; data_dirs[i]; ++i) {
-		icon_path = g_strconcat(data_dirs[i],"icons/jackie.png", NULL);
+		icon_path = g_strconcat(data_dirs[i],"/icons/jackie.png", NULL);
 		if (!access(icon_path,F_OK)) {
 			break;
 		}
