@@ -39,14 +39,6 @@
 #include "callback.h"
 #include "version.h"
 
-/* cli usage message */
-void usage(char* prog, int exitcode) {
-	fprintf(stderr, "%s version %s\n", PROG_NAME, PROG_VERSION);
-	fprintf(stderr, "Usage: %s\n", basename(prog));
-	exit(exitcode);
-}
-
-/* here we are */
 int main(int argc, char **argv)
 {
 	GtkStatusIcon* tray_icon = NULL;	/* system tray icon object */
@@ -61,25 +53,18 @@ int main(int argc, char **argv)
 
 	app_data = (JkAppData*) malloc (sizeof(JkAppData));
 	app_data->config_path = g_build_path ("/", g_get_home_dir(), ".jackie", NULL);
-	app_data->progs = jk_read_config(app_data->config_path);
-	app_data->jackd_cmdline = jk_read_cmdline("jackd", app_data->config_path);
-	app_data->patchbay_cmdline = jk_read_cmdline("patchbay", app_data->config_path);
 	app_data->jackd_pid = (GPid)0;
 	app_data->jackd_error = NULL;
 	app_data->jackd_entry = NULL;
 	app_data->patchbay_entry = NULL;
 	app_data->pref_window = NULL;
+	app_data->jackd_cmdline = NULL;
+	app_data->patchbay_cmdline = NULL;
+	app_data->transport_cmdline = NULL;
 
 	/* parse cli argument */ 
 	gtk_init(&argc, &argv);
-#if 0
-	switch (argc) {
-		case 1:
-			break;
-		default:
-			usage(argv[0], EXIT_FAILURE);
-	}
-#endif
+	
 	/* create left-click menu */
 	left_menu = menu_new();
 	app_data->left_menu = left_menu;

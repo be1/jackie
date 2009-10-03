@@ -40,7 +40,6 @@ typedef struct {
 /* data to pass to the callbacks */
 typedef struct {
 	gchar* config_path;		/* configuration path */
-	GSList* progs;			/* configuration list  */
 	GtkMenu* left_menu;		/* gtk left menu */
 	GtkMenu* right_menu;		/* gtk right menu */
 	GtkMenuItem* startstop;		/* start/stop menu item */
@@ -50,7 +49,8 @@ typedef struct {
 	GtkEntry* patchbay_entry;	/* command line entry for patchbay */
 	gchar tooltip_buffer[BUFSIZ];	/* working copy of tooltip */
 	gchar* jackd_cmdline;		/* command_line text for jackd */
-	gchar* patchbay_cmdline;	/* command_line text for patchbay */
+	gchar* patchbay_cmdline;		/* command_line text for patchbay */
+	gchar* transport_cmdline;		/* command_line text for transport */
 	GPid jackd_pid;			/* pid of jackd process */
 	gint jackd_in;			/* process stdin */
 	gint jackd_out;			/* process stdout */
@@ -61,17 +61,11 @@ typedef struct {
 	GError* jackd_error;		/* GLib error details */
 } JkAppData;
 
-/* creates jackd command line given the config file */
-gchar* jk_read_cmdline(const gchar* name, gchar* config_path);
-
 /* creates a JkConfig given the config file */
-GSList* jk_read_config (gchar* config_path);
-
-/* deletes a JkConfig */
-void jk_delete_progs(GSList* config);
+void jk_read_config (JkAppData* d);
 
 /* spawn application */
-gboolean jk_spawn_application(JkAppData* d, const char* name);
+gboolean jk_spawn_application(const char* cmdline);
 
 /* spawn jackd */
 gboolean jk_spawn_jackd(JkAppData* d);
@@ -79,11 +73,8 @@ gboolean jk_spawn_jackd(JkAppData* d);
 /* update tooltip */
 gboolean jk_update_tooltip (gpointer app_data);
 
-/* update jackd command line */
-void jk_update_cmdline (GSList* progs, const gchar* name, const gchar* cmdline);
-
 /* write config into file */
-void jk_write_config(const char* config_path, const GSList* progs);
+void jk_write_config(JkAppData* d);
 
 /* quit application */
 void jk_quit(JkAppData* d);

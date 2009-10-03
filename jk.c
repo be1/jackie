@@ -33,186 +33,80 @@
 #include <gtk/gtk.h>
 #include "jk.h"
 
-/* creates a default JkConfig structure */
-GSList* jk_create_default_config(void) {
-	GSList* progs = NULL;
-	JkProg* pr = NULL;
-	int i;
-	char* names [3] = {"jackd", "patchbay", "transport"};
-	char* cmdlines [3] = {"/usr/bin/jackd -R -d alsa", "/usr/bin/patchage", ""};
-
-	for (i = 0; i < 3; i++) {
-		pr = (JkProg*) malloc (sizeof(JkProg));
-		pr->name = g_strdup(names[i]);
-		pr->cmdline = g_strdup(cmdlines[i]);
-		progs = g_slist_append(progs, (gpointer)pr);
-	}
-	return progs;
-}
-
-/* update jackd command line to list of progs */
-void jk_update_cmdline (GSList* progs, const gchar* name, const gchar* cmdline) {
-	GSList* pr;
-
-	for (pr = progs; pr; pr = g_slist_next(pr)) {
-		JkProg* p = (JkProg*)pr->data;
-
-		if (!strcmp(p->name, name)) {
-			g_free(p->cmdline);
-			p->cmdline = g_strdup(cmdline);
-			break;
-		}
-	}
-}
-
 /* writes the config to a file */
-void jk_write_config(const char* config_path, const GSList* progs) {
+void jk_write_config(JkAppData* d) {
 	GKeyFile* kf = NULL;
-	const GSList* pr;
 	gchar* data = NULL;
 	gsize len;
 	FILE* fp = NULL;
-
+	
 	kf = g_key_file_new();
-	for (pr = progs; pr; pr = g_slist_next(pr)) {
-		JkProg* p = (JkProg*)pr->data;
-		g_key_file_set_value (kf, p->name, "cmdline", p->cmdline);
-		/* append other params here */
-	}
+	g_key_file_set_value (kf, "jackd", "cmdline", d->jackd_cmdline);
+	g_key_file_set_value (kf, "patchbay", "cmdline", d->patchbay_cmdline);
+	g_key_file_set_value (kf, "transport", "cmdline", d->transport_cmdline);
 	data = g_key_file_to_data(kf, &len, NULL);
-	fp = fopen(config_path, "w");
-	/* FIXME: check error (disk full, e.g.)*/
+	fp = fopen(d->config_path, "w");
+	/* FIXME: check error (disk full, e.g.) */
 	fputs(data, fp);
 	fclose(fp);
 	g_free(data);
 }
 
-gchar* jk_read_cmdline(const gchar* name, gchar* config_path) {
+void jk_read_config (JkAppData* d) {
 	GKeyFile* kf = NULL;
 	GError* error = NULL;
-	gchar* cmdline = NULL;
-	gchar** keys = NULL;
-	gchar** groups = NULL;
-	gchar* val;
-	gsize glen, klen, i, j;
 
 	kf = g_key_file_new();
-	g_key_file_load_from_file(kf, config_path, G_KEY_FILE_NONE, &error);
+	g_key_file_load_from_file(kf, d->config_path, G_KEY_FILE_NONE, &error);
 	if(error) {
-		GSList* progs = NULL;
-		progs = jk_create_default_config();
-		jk_write_config(config_path, progs);
-		g_error_free(error);
-		jk_delete_progs(progs);
-		error = NULL;
-		g_key_file_load_from_file(kf, config_path, G_KEY_FILE_NONE, &error);
-	}
-	groups = g_key_file_get_groups(kf, &glen);
-	for (i = 0; i < glen; ++i) {
-		if (strcmp(groups[i], name))
-			continue; /* pass if this is not about 'name' */
-		keys = g_key_file_get_keys(kf, groups[i], &klen, &error);
-		if(error) {
-			g_warning("jk_read_cmdline: %s\n", error->message);
-			g_error_free(error);
-			error = NULL;
-		} else for (j = 0; j < klen; ++j) {
-			val = g_key_file_get_value (kf, groups[i], keys[j], &error);
-			if(error) {
-				g_warning("jk_read_cmdline: %s\n", error->message);
-				g_error_free(error);
-				error = NULL;
-			}
-			/* return cmdline */
-			if (!strcmp(keys [j], "cmdline")) {
-				cmdline = g_strdup(val);
-			}
-			/* append other params here */
-		}
-	}
-	g_strfreev(groups);
-	g_strfreev(keys);
-	g_key_file_free(kf);
-	/* defaults */
-	if (!cmdline) {
-		if (!strcmp(name, "jackd"))
-			cmdline = g_strdup("/usr/bin/jackd -R -d alsa");
-		else if (!strcmp(name, "patchbay"))
-			cmdline = g_strdup("/usr/bin/patchage");
-		/* other defaults here */
-	}
-	return cmdline;
-}
-
-/* creates a list of JkProgs given the config file */
-GSList* jk_read_config (gchar* config_path) {
-	GSList* progs = NULL;
-	GKeyFile* kf = NULL;
-	GError* error = NULL;
-	gchar** keys = NULL;
-	gchar** groups = NULL;
-	gchar* val;
-	gsize glen, klen, i, j;
-
-	kf = g_key_file_new();
-	g_key_file_load_from_file(kf, config_path, G_KEY_FILE_NONE, &error);
-	if(error) {
-		progs = jk_create_default_config();
-		jk_write_config(config_path, progs);
+		g_free(d->jackd_cmdline);
+		d->jackd_cmdline = g_strdup("/usr/bin/jackd -R -d alsa");
+		g_free(d->patchbay_cmdline);
+		d->patchbay_cmdline = g_strdup("patchage");
+		g_free(d->transport_cmdline);
+		d->transport_cmdline = g_strdup("");
+		
+		jk_write_config(d);
 		g_error_free(error);
 		error = NULL;
-		g_key_file_load_from_file(kf, config_path, G_KEY_FILE_NONE, &error);
+		g_key_file_load_from_file(kf, d->config_path, G_KEY_FILE_NONE, &error);
 	}
-	groups = g_key_file_get_groups(kf, &glen);
-	for (i = 0; i < glen; ++i) {
-		JkProg* p;
-
-		keys = g_key_file_get_keys(kf, groups[i], &klen, &error);
-		if(error) {
-			g_warning("jk_read_config: %s\n", error->message);
-			g_error_free(error);
-			error = NULL;
-		} else for (j = 0; j < klen; ++j) {
-			val = g_key_file_get_value (kf, groups[i], keys[j], &error);
-			if(error) {
-				g_warning("jk_read_config: %s\n", error->message);
-				g_error_free(error);
-				error = NULL;
-			}
-			/* store config */
-			p = (JkProg*) malloc(sizeof(JkProg));
-			p->name = g_strdup(groups[i]);
-			if (!strcmp(keys [j], "cmdline")) {
-				p->cmdline = val;
-			}
-			p->error = NULL;
-			/* append other params here */
-		}
-		progs = g_slist_append(progs, (gpointer)p);
+	d->jackd_cmdline = g_strdup(g_key_file_get_value (kf, "jackd", "cmdline", &error));
+	if(error) {
+		g_warning("read_config: %s\n", error->message);
+		g_error_free(error);
+		error = NULL;
 	}
-	g_strfreev(groups);
-	g_strfreev(keys);
+	d->patchbay_cmdline = g_key_file_get_value(kf, "patchbay", "cmdline", &error);
+	if(error) {
+		g_warning("read_config: %s\n", error->message);
+		g_error_free(error);
+		error = NULL;
+	}
+	d->transport_cmdline = g_key_file_get_value(kf, "transport", "cmdline", &error);
+	if(error) {
+		g_warning("read_config: %s\n", error->message);
+		g_error_free(error);
+		error = NULL;
+	}
 	g_key_file_free(kf);
-	return progs;
-}
 
-/* deletes a JkProg list */
-void jk_delete_progs(GSList* progs) {
-	GSList* pr = NULL;
-	JkProg* p = NULL;
-
-	for (pr = progs; pr; pr = g_slist_next(pr)) {
-		p = (JkProg*)pr->data;
-		g_free(p->cmdline);
-		free(p);
-		p = NULL;
+	if (!d->jackd_cmdline || d->jackd_cmdline[0] == '\0') {
+		g_free(d->jackd_cmdline);
+		d->jackd_cmdline = g_strdup("/usr/bin/jackd -R -d alsa");
 	}
-	g_slist_free(progs);
+	if (!d->patchbay_cmdline || d->patchbay_cmdline[0] == '\0') {
+		g_free(d->patchbay_cmdline);
+		d->patchbay_cmdline = g_strdup("patchage");
+	}
+	if (!d->transport_cmdline || d->transport_cmdline[0] == '\0') {
+		g_free(d->transport_cmdline);
+		d->transport_cmdline = g_strdup("");
+	}
 }
 
 void jk_quit(JkAppData* d) {
 	g_free(d->config_path);
-	jk_delete_progs(d->progs);
 	gtk_main_quit();
 }
 
@@ -263,27 +157,19 @@ gboolean jk_on_data(GIOChannel* source, GIOCondition condition, gpointer app_dat
 }
 
 /* spawn a external program */
-gboolean jk_spawn_application(JkAppData* d, const gchar* name) {
-	GSList* progs = d->progs;
-	GSList* pr;
-	JkProg* p;
+gboolean jk_spawn_application(const gchar* cmdline) {
 	gchar** argv = NULL;
 	gboolean ret;
 	GPid pid = (GPid)0;
 	GError* error = NULL;
 
-	for (pr = progs; pr; pr = g_slist_next(pr)) {
-		p = (JkProg*) pr->data;
+	argv = g_strsplit(cmdline, " ", 0);
 
-		if (!strcmp(p->name, name))
-			break;
-	}
-	argv = g_strsplit(p->cmdline, " ", 0);
 	ret = g_spawn_async (NULL, argv, NULL, 0, NULL, NULL, &pid, &error);
 	if(ret == FALSE) {
 		g_warning("jk_spawn_application: %s\n", error->message);
 		g_error_free(error);
-		d->jackd_error=NULL;
+		error=NULL;
 	}
 	g_strfreev(argv);
 	return ret;

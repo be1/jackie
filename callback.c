@@ -71,7 +71,7 @@ void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 	}
 
 	/* else reload config then start jackd */
-	d->jackd_cmdline = jk_read_cmdline("jackd", d->config_path);
+	jk_read_config(d);
 	if (!d->jackd_cmdline) { /* jackd group not found */
 		gtk_status_icon_set_tooltip(d->tray_icon, "Missing jackd in configuration");
 		return;
@@ -109,8 +109,8 @@ void menu_item_on_patch(GtkMenuItem* instance, gpointer app_data) {
 	JkAppData* d = (JkAppData*)app_data;
 	gboolean ret;
 
-	d->patchbay_cmdline = jk_read_cmdline("patchbay", d->config_path);
-	ret = jk_spawn_application(d, "patchbay");
+	jk_read_config(d);
+	ret = jk_spawn_application(d->patchbay_cmdline);
 	if (ret == FALSE)
 		gtk_status_icon_set_tooltip(d->tray_icon, "Failed to launch application");
 		
@@ -119,8 +119,15 @@ void menu_item_on_patch(GtkMenuItem* instance, gpointer app_data) {
 
 /* handler for the "Transport" menu item */
 void menu_item_on_trans(GtkMenuItem* instance, gpointer app_data) {
-	/* FIXME: launch transport control */
-	instance = app_data = NULL;
+	JkAppData* d = (JkAppData*)app_data;
+	gboolean ret;
+
+	jk_read_config(d);
+	ret = jk_spawn_application(d->transport_cmdline);
+	if (ret == FALSE)
+		gtk_status_icon_set_tooltip(d->tray_icon, "Failed to launch application");
+		
+	instance = NULL;
 }
 
 /* callback on Preferences window closed */
@@ -131,13 +138,11 @@ void on_pref_close (gpointer app_data) {
 	text = gtk_entry_get_text(d->jackd_entry);
 	g_free(d->jackd_cmdline);
 	d->jackd_cmdline = g_strdup(text); /* set jackd command line */
-	jk_update_cmdline(d->progs, "jackd", d->jackd_cmdline);
 	text = gtk_entry_get_text(d->patchbay_entry);
 	g_free(d->patchbay_cmdline);
 	d->patchbay_cmdline = g_strdup(text); /* set patchbay command line */
-	jk_update_cmdline(d->progs, "patchbay", d->patchbay_cmdline);
 	/* write it to $HOME/.jackie */
-	jk_write_config(d->config_path, d->progs);
+	jk_write_config(d);
 	gtk_widget_hide(GTK_WIDGET(d->pref_window));
 	gtk_widget_destroy(GTK_WIDGET(d->pref_window));
 	d->pref_window = NULL;
