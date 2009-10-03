@@ -61,6 +61,7 @@ int main(int argc, char **argv)
 	app_data->jackd_cmdline = NULL;
 	app_data->patchbay_cmdline = NULL;
 	app_data->transport_cmdline = NULL;
+	app_data->jackd_client = NULL;
 
 	/* parse cli argument */ 
 	gtk_init(&argc, &argv);
@@ -109,9 +110,7 @@ int main(int argc, char **argv)
 
 	/* right menu items callbacks */
 	menu_append_item(right_menu, "Patchbay", G_CALLBACK(menu_item_on_patch), app_data);
-#if 0
 	menu_append_item(right_menu, "Transport", G_CALLBACK(menu_item_on_trans), app_data);
-#endif
 	menu_append_item(right_menu, "Preferences", G_CALLBACK(menu_item_on_pref), app_data);
 	menu_append_item(right_menu, "About", G_CALLBACK(menu_item_on_about), app_data);
 	menu_append_item(right_menu, "Quit", G_CALLBACK(menu_item_on_quit), app_data);

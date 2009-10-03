@@ -62,7 +62,7 @@ void jk_read_config (JkAppData* d) {
 		g_free(d->jackd_cmdline);
 		d->jackd_cmdline = g_strdup("/usr/bin/jackd -R -d alsa");
 		g_free(d->patchbay_cmdline);
-		d->patchbay_cmdline = g_strdup("patchage");
+		d->patchbay_cmdline = g_strdup("/usr/bin/patchage");
 		g_free(d->transport_cmdline);
 		d->transport_cmdline = g_strdup("");
 		
@@ -97,7 +97,7 @@ void jk_read_config (JkAppData* d) {
 	}
 	if (!d->patchbay_cmdline || d->patchbay_cmdline[0] == '\0') {
 		g_free(d->patchbay_cmdline);
-		d->patchbay_cmdline = g_strdup("patchage");
+		d->patchbay_cmdline = g_strdup("/usr/bin/patchage");
 	}
 	if (!d->transport_cmdline || d->transport_cmdline[0] == '\0') {
 		g_free(d->transport_cmdline);
@@ -121,7 +121,7 @@ void jk_on_jackd_sigchld(GPid pid, gint status, gpointer app_data) {
 	g_source_remove(d->jackd_chld);
 	g_spawn_close_pid(pid);
 
-	if (status) {
+	if (status && (!d->jackd_client)) { /* really really stopped */
 		d->jackd_pid = (GPid)0;
 		gtk_menu_item_set_label(d->startstop, "Start");
 		gtk_status_icon_set_tooltip(d->tray_icon, "Jackd stopped");

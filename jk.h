@@ -30,12 +30,7 @@
 #define _JK_H
 #include <gtk/gtk.h>
 #include <stdio.h>
-
-typedef struct {
-	gchar* name;		/* prog name (key) */
-	gchar* cmdline;		/* commandline (value) */
-	GError* error;		/* GLib error details */
-} JkProg;
+#include <jack/jack.h>
 
 /* data to pass to the callbacks */
 typedef struct {
@@ -59,6 +54,8 @@ typedef struct {
 	guint jackd_chld;		/* GLib source id for child watch */
 	guint jackd_fd;			/* GLib source id for file watch */
 	GError* jackd_error;		/* GLib error details */
+	jack_client_t* jackd_client;	/* the jackd handle */
+	jack_status_t jackd_status;	/* the jackd status */
 } JkAppData;
 
 /* creates a JkConfig given the config file */

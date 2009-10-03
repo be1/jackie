@@ -26,6 +26,7 @@
  * 
  */
 
+#include <unistd.h>
 #include <gtk/gtk.h>
 #include "jk.h"
 #include "menu.h"
@@ -62,9 +63,13 @@ void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 	gboolean ret;
 
 	/* check if jackd is running */
-	if (d->jackd_pid) { /* stop jackd */
-		kill (d->jackd_pid, 2); /* SIGINT */
-		d->jackd_pid = (GPid)0;
+	if (d->jackd_client) { /* stop jackd */
+		jack_client_close(d->jackd_client);
+		d->jackd_client = NULL;
+		if (d->jackd_pid) {
+			kill (d->jackd_pid, 2); /* SIGINT */
+			d->jackd_pid = (GPid)0;
+		}
 		gtk_status_icon_set_tooltip(d->tray_icon, "Jackd Stopped");
 		gtk_menu_item_set_label(instance, "Start");
 		return;
@@ -77,7 +82,10 @@ void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 		return;
 	}
 	ret = jk_spawn_jackd(d); /* start jackd */
-	if (ret == FALSE) { /* bad commandline */
+	/* try to connect an existing jackd */
+	d->jackd_client = jack_client_open("jackie", JackNoStartServer, &d->jackd_status);
+
+	if (!d->jackd_client) { /* assume bad commandline */
 		gtk_status_icon_set_tooltip(d->tray_icon, "Bad jackd command line");
 		d->jackd_pid = (GPid)0;
 	} else {

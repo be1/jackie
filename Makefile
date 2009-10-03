@@ -2,8 +2,8 @@
 PRGNAME=jackie
 PREFIX=/usr/local
 SRC=main.c jk.c menu.c about.c callback.c window.c
-CFLAGS=`pkg-config --cflags glib-2.0` `pkg-config --cflags gtk+-2.0`
-LDFLAGS=`pkg-config --libs glib-2.0` `pkg-config --libs gtk+-2.0`
+CFLAGS=`pkg-config --cflags glib-2.0` `pkg-config --cflags gtk+-2.0` `pkg-config --cflags jack`
+LDFLAGS=`pkg-config --libs glib-2.0` `pkg-config --libs gtk+-2.0` `pkg-config --libs jack`
 
 all:
 	sed -e "s#__PREFIX__#$(DESTDIR)$(PREFIX)#" jackie.desktop.in > jackie.desktop
