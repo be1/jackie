@@ -15,6 +15,10 @@
 	with this program; if not, write to the Free Software Foundation, Inc.,
 	51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+2009-10-04 version 0.5
+	* added internationalization
+	* fr_FR translation provided
+
 2009-10-04 version 0.4
 	* allow jackd to be already running
 	* rewrote config parsing
