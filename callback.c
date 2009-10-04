@@ -212,6 +212,8 @@ void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data) {
 	transport_label = GTK_LABEL(gtk_label_new(_("Transport command line")));
 	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(transport_label), FALSE, FALSE, 0);
 
+	jk_read_config(d);
+
 	d->patchbay_entry = GTK_ENTRY(gtk_entry_new());
 	gtk_entry_set_text(d->patchbay_entry, d->patchbay_cmdline); /* patchbay command line */
 	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(d->patchbay_entry), FALSE, FALSE, 0);
