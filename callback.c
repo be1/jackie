@@ -194,33 +194,49 @@ void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data) {
 	GtkVBox* vbox;
 	GtkHBox* hbox1;
 	GtkHBox* hbox2;
+	GtkHBox* hbox3;
 	GtkLabel* transport_label;
 	GtkLabel* patchbay_label;
+	GtkLabel* label0;
+	GtkButton* button1;
 
 	d->pref_window = window_create(_("Preferences"));
-	vbox = GTK_VBOX(gtk_vbox_new(FALSE, 0));
+	gtk_window_set_default_size (GTK_WINDOW(d->pref_window), 300, 200);
+	gtk_window_set_resizable (GTK_WINDOW(d->pref_window), TRUE);
+
+	vbox = GTK_VBOX(gtk_vbox_new(TRUE, 0));
 	gtk_container_add(GTK_CONTAINER(d->pref_window), GTK_WIDGET(vbox));
 
 	hbox1 = GTK_HBOX(gtk_hbox_new(TRUE, 0));
-	gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hbox1), TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hbox1), TRUE, FALSE, 10);
 
 	hbox2 = GTK_HBOX(gtk_hbox_new(TRUE, 0));
-	gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hbox2), TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hbox2), TRUE, FALSE, 10);
+
+	hbox3 = GTK_HBOX(gtk_hbox_new (TRUE, 0));
+	gtk_box_pack_start (GTK_BOX(vbox), GTK_WIDGET(hbox3), TRUE, FALSE, 10);
 
 	patchbay_label = GTK_LABEL(gtk_label_new(_("Patchbay command line")));
-	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(patchbay_label), FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(patchbay_label), TRUE, FALSE, 0);
 	transport_label = GTK_LABEL(gtk_label_new(_("Transport command line")));
-	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(transport_label), FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(transport_label), TRUE, FALSE, 0);
 
 	jk_read_config(d);
 
 	d->patchbay_entry = GTK_ENTRY(gtk_entry_new());
 	gtk_entry_set_text(d->patchbay_entry, d->patchbay_cmdline); /* patchbay command line */
-	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(d->patchbay_entry), FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(d->patchbay_entry), TRUE, FALSE, 10);
 	d->transport_entry = GTK_ENTRY(gtk_entry_new());
 	gtk_entry_set_text(d->transport_entry, d->transport_cmdline); /* transport command line */
-	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(d->transport_entry), FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(d->transport_entry), TRUE, FALSE, 10);
 	
+	label0 = GTK_LABEL(gtk_label_new (""));
+	gtk_box_pack_start (GTK_BOX(hbox3), GTK_WIDGET(label0), TRUE, FALSE, 10);
+
+	button1 = GTK_BUTTON(gtk_button_new_from_stock (GTK_STOCK_CLOSE));
+	gtk_box_pack_start (GTK_BOX(hbox3), GTK_WIDGET(button1), FALSE, FALSE, 10);
+
+	g_signal_connect_swapped (G_OBJECT(button1), "clicked", G_CALLBACK(on_pref_close), (gpointer)d);
 	g_signal_connect_swapped(G_OBJECT(d->pref_window), "delete-event", G_CALLBACK(on_pref_close), (gpointer)d);
 
 	gtk_widget_show_all(GTK_WIDGET(d->pref_window));
