@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=__PRGTITLE__
 GenericName=JACK Control
-Comment=Jackie is a small JACK Audio Connection Kit Launcher
+Comment=a small JACK Audio Connection Kit Launcher
 Exec=__PREFIX__/bin/__PRGNAME__
 Icon=__PREFIX__/share/icons/jackie.png
 Categories=Audio;AudioVideo;MIDI;JACK;ALSA;Gtk+;
