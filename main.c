@@ -31,13 +31,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <libgen.h>
+#include <libintl.h>
+#include <locale.h>
 #include <glib.h>
 #include <gtk/gtk.h>
 #include "jk.h"
 #include "menu.h"
 #include "callback.h"
 #include "version.h"
+#define _(string) gettext (string)
 
 int main(int argc, char **argv)
 {
@@ -59,6 +61,11 @@ int main(int argc, char **argv)
 	app_data->patchbay_cmdline = NULL;
 	app_data->transport_cmdline = NULL;
 	app_data->jackd_client = NULL;
+
+	/*  internationalization */
+	setlocale ( LC_ALL, "" );
+	bindtextdomain ("jackie", LOCALEDIR);
+	textdomain ( "jackie" );
 
 	/* parse cli argument */ 
 	gtk_init(&argc, &argv);
@@ -106,8 +113,8 @@ int main(int argc, char **argv)
 	app_data->startstop = menu_append_image_item(left_menu, GTK_STOCK_CONNECT, G_CALLBACK(menu_item_on_start_stop), app_data);
 
 	/* right menu items callbacks */
-	menu_append_item(right_menu, "Patch_bay", G_CALLBACK(menu_item_on_patch), app_data);
-	menu_append_item(right_menu, "Trans_port", G_CALLBACK(menu_item_on_trans), app_data);
+	menu_append_item(right_menu,_ ("Patch_bay"), G_CALLBACK(menu_item_on_patch), app_data);
+	menu_append_item(right_menu, _("Trans_port"), G_CALLBACK(menu_item_on_trans), app_data);
 	menu_append_image_item(right_menu, GTK_STOCK_PREFERENCES, G_CALLBACK(menu_item_on_pref), app_data);
 	menu_append_image_item(right_menu, GTK_STOCK_ABOUT, G_CALLBACK(menu_item_on_about), app_data);
 	menu_append_image_item(right_menu, GTK_STOCK_QUIT, G_CALLBACK(menu_item_on_quit), app_data);

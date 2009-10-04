@@ -27,6 +27,8 @@
  */
 
 #include <unistd.h>
+#include <libintl.h>
+#include <locale.h>
 #include <gtk/gtk.h>
 #include <jack/jack.h>
 #include <jack/statistics.h>
@@ -35,6 +37,7 @@
 #include "about.h"
 #include "version.h"
 #include "window.h"
+#define _(string) gettext (string)
 
 /* handler for left-button click */
 void tray_icon_on_left_click(GtkStatusIcon* instance, gpointer app_data)
@@ -70,7 +73,7 @@ int jk_on_jackd_xrun(void* app_data) {
 	JkAppData* d = (JkAppData*) app_data;
 	gchar* buf = NULL;
 
-	buf = g_strdup_printf("xrun: %d. last: %.0f usecs", ++d->xrun, jack_get_xrun_delayed_usecs(d->jackd_client)); 
+	buf = g_strdup_printf(_("xrun: %d. last: %.0f usecs"), ++d->xrun, jack_get_xrun_delayed_usecs(d->jackd_client)); 
 	gtk_status_icon_set_tooltip (d->tray_icon, buf);
 	g_free(buf);
 	return 0;
@@ -86,7 +89,7 @@ void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 	if (d->jackd_client) { /* stop jackd */
 		jack_client_close(d->jackd_client);
 		d->jackd_client = NULL;
-		gtk_status_icon_set_tooltip(d->tray_icon, "Disconnected");
+		gtk_status_icon_set_tooltip(d->tray_icon, _("Disconnected"));
 		if (img) {
 			gtk_widget_destroy(img);
 			img = NULL;
@@ -102,7 +105,7 @@ void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 	d->jackd_client = jack_client_open("jackie", JackNullOption, &d->jackd_status);
 
 	if (!d->jackd_client) {
-		gtk_status_icon_set_tooltip(d->tray_icon, "Could not connect or start Jackd");
+		gtk_status_icon_set_tooltip(d->tray_icon, _("Could not connect or start Jackd"));
 	} else {
 		/* set info/error callbacks */
 		jack_set_error_function(jk_on_jackd_error);
@@ -110,7 +113,7 @@ void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 		jack_set_xrun_callback(d->jackd_client, jk_on_jackd_xrun, app_data);
 		jack_activate(d->jackd_client);
 
-		gtk_status_icon_set_tooltip(d->tray_icon, "Connected");
+		gtk_status_icon_set_tooltip(d->tray_icon, _("Connected"));
 		if (img) {
 			gtk_widget_destroy(img);
 			img = NULL;
@@ -148,7 +151,7 @@ void menu_item_on_patch(GtkMenuItem* instance, gpointer app_data) {
 	jk_read_config(d);
 	ret = jk_spawn_application(d->patchbay_cmdline);
 	if (ret == FALSE)
-		gtk_status_icon_set_tooltip(d->tray_icon, "Failed to launch application");
+		gtk_status_icon_set_tooltip(d->tray_icon, _("Failed to launch application"));
 		
 	instance = NULL;
 }
@@ -161,7 +164,7 @@ void menu_item_on_trans(GtkMenuItem* instance, gpointer app_data) {
 	jk_read_config(d);
 	ret = jk_spawn_application(d->transport_cmdline);
 	if (ret == FALSE)
-		gtk_status_icon_set_tooltip(d->tray_icon, "Failed to launch application");
+		gtk_status_icon_set_tooltip(d->tray_icon, _("Failed to launch application"));
 		
 	instance = NULL;
 }
@@ -194,7 +197,7 @@ void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data) {
 	GtkLabel* transport_label;
 	GtkLabel* patchbay_label;
 
-	d->pref_window = window_create("Preferences");
+	d->pref_window = window_create(_("Preferences"));
 	vbox = GTK_VBOX(gtk_vbox_new(FALSE, 0));
 	gtk_container_add(GTK_CONTAINER(d->pref_window), GTK_WIDGET(vbox));
 
@@ -204,9 +207,9 @@ void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data) {
 	hbox2 = GTK_HBOX(gtk_hbox_new(TRUE, 0));
 	gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hbox2), TRUE, FALSE, 0);
 
-	patchbay_label = GTK_LABEL(gtk_label_new("patchbay command line"));
+	patchbay_label = GTK_LABEL(gtk_label_new(_("Patchbay command line")));
 	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(patchbay_label), FALSE, FALSE, 0);
-	transport_label = GTK_LABEL(gtk_label_new("transport command line"));
+	transport_label = GTK_LABEL(gtk_label_new(_("Transport command line")));
 	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(transport_label), FALSE, FALSE, 0);
 
 	d->patchbay_entry = GTK_ENTRY(gtk_entry_new());
