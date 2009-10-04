@@ -15,6 +15,12 @@
 	with this program; if not, write to the Free Software Foundation, Inc.,
 	51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+2009-10-04 version 0.4
+	* allow jackd to be already running
+	* rewrote config parsing
+	* added transport menu entry
+	* rewrote xrun detection
+
 2009-09-09 version 0.3
 	* added patchbay program launcher
 

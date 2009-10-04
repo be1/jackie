@@ -2,10 +2,6 @@
  * menu.c Copyright © 2009 by Benoît Rouits <brouits@free.fr>
  * Published under the terms of the GNU General Public License v2 (GPLv2).
  * 
- ************************************************* 
- * jackie: a small jack daemon startup interface *
- *************************************************
- * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -43,7 +39,7 @@ GtkMenuItem* menu_append_item(GtkMenu* menu, gchar* label, GCallback callback, g
 {
 	GtkWidget* item;
 
-	item = gtk_menu_item_new_with_label (label);
+	item = gtk_menu_item_new_with_mnemonic (label);
 	gtk_menu_shell_append ((GtkMenuShell*) (menu), item);
 	if (callback)
 		g_signal_connect (G_OBJECT(item), "activate", G_CALLBACK(callback), cb_data);
@@ -65,3 +61,18 @@ void menu_hide(GtkMenu* menu)
 	gtk_menu_popdown(GTK_MENU(menu));
 	return;
 }
+
+/* append a stock imageitem to the menu, and connect its callback on "activate" event */
+GtkMenuItem* menu_append_image_item(GtkMenu* menu, const gchar* stock_id, GCallback callback, gpointer cb_data)
+{
+	GtkWidget* item;
+
+	item = gtk_image_menu_item_new_from_stock(stock_id, NULL);
+	gtk_menu_shell_append ((GtkMenuShell*) (menu), item);
+	if (callback)
+		g_signal_connect (G_OBJECT(item), "activate", G_CALLBACK(callback), cb_data);
+	gtk_widget_show (item);
+
+	return GTK_MENU_ITEM(item);
+}
+

@@ -2,10 +2,6 @@
  * menu.h Copyright © 2009 by Benoît Rouits <brouits@free.fr>
  * Published under the terms of the GNU General Public License v2 (GPLv2).
  * 
- ************************************************* 
- * jackie: a small jack daemon startup interface *
- *************************************************
- * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -26,8 +22,8 @@
  * 
  */
 
-#ifndef _MENU_H
-#define _MENU_H
+#ifndef MENU_H
+#define MENU_H
 #include <glib.h>
 #include <gtk/gtk.h>
 
@@ -37,9 +33,12 @@ GtkMenu* menu_new(void);
 /* append an item to the menu, and connect its callback on "activate" event */
 GtkMenuItem* menu_append_item(GtkMenu* menu, gchar* label, GCallback callback, gpointer cb_data);
 
+/* append a stock image item to the menu, and connect its callback on "activate" event */
+GtkMenuItem* menu_append_image_item(GtkMenu* menu, const gchar* stock_id, GCallback callback, gpointer cb_data);
+
 /* show the menu */
 void menu_show(GtkMenu* menu, guint button, guint activate_time);
 
 /* hide the menu */
 void menu_hide(GtkMenu* menu);
-#endif /* _MENU_H */
+#endif /* MENU_H */

@@ -53,12 +53,9 @@ int main(int argc, char **argv)
 
 	app_data = (JkAppData*) malloc (sizeof(JkAppData));
 	app_data->config_path = g_build_path ("/", g_get_home_dir(), ".jackie", NULL);
-	app_data->jackd_pid = (GPid)0;
-	app_data->jackd_error = NULL;
-	app_data->jackd_entry = NULL;
 	app_data->patchbay_entry = NULL;
+	app_data->transport_entry = NULL;
 	app_data->pref_window = NULL;
-	app_data->jackd_cmdline = NULL;
 	app_data->patchbay_cmdline = NULL;
 	app_data->transport_cmdline = NULL;
 	app_data->jackd_client = NULL;
@@ -106,14 +103,14 @@ int main(int argc, char **argv)
                          G_CALLBACK(tray_icon_on_right_click), app_data);
 
 	/* left menu item callbacks */
-	app_data->startstop = menu_append_item(left_menu, "Start", G_CALLBACK(menu_item_on_start_stop), app_data);
+	app_data->startstop = menu_append_image_item(left_menu, GTK_STOCK_CONNECT, G_CALLBACK(menu_item_on_start_stop), app_data);
 
 	/* right menu items callbacks */
-	menu_append_item(right_menu, "Patchbay", G_CALLBACK(menu_item_on_patch), app_data);
-	menu_append_item(right_menu, "Transport", G_CALLBACK(menu_item_on_trans), app_data);
-	menu_append_item(right_menu, "Preferences", G_CALLBACK(menu_item_on_pref), app_data);
-	menu_append_item(right_menu, "About", G_CALLBACK(menu_item_on_about), app_data);
-	menu_append_item(right_menu, "Quit", G_CALLBACK(menu_item_on_quit), app_data);
+	menu_append_item(right_menu, "Patch_bay", G_CALLBACK(menu_item_on_patch), app_data);
+	menu_append_item(right_menu, "Trans_port", G_CALLBACK(menu_item_on_trans), app_data);
+	menu_append_image_item(right_menu, GTK_STOCK_PREFERENCES, G_CALLBACK(menu_item_on_pref), app_data);
+	menu_append_image_item(right_menu, GTK_STOCK_ABOUT, G_CALLBACK(menu_item_on_about), app_data);
+	menu_append_image_item(right_menu, GTK_STOCK_QUIT, G_CALLBACK(menu_item_on_quit), app_data);
 
 	/* run */
         gtk_main();

@@ -40,22 +40,13 @@ typedef struct {
 	GtkMenuItem* startstop;		/* start/stop menu item */
 	GtkStatusIcon* tray_icon;	/* gtk tray icon */
 	GtkWindow* pref_window;		/* gtk preference window */
-	GtkEntry* jackd_entry;		/* command line entry for jackd */
 	GtkEntry* patchbay_entry;	/* command line entry for patchbay */
-	gchar tooltip_buffer[BUFSIZ];	/* working copy of tooltip */
-	gchar* jackd_cmdline;		/* command_line text for jackd */
+	GtkEntry* transport_entry;	/* command line entry for transport */
 	gchar* patchbay_cmdline;		/* command_line text for patchbay */
 	gchar* transport_cmdline;		/* command_line text for transport */
-	GPid jackd_pid;			/* pid of jackd process */
-	gint jackd_in;			/* process stdin */
-	gint jackd_out;			/* process stdout */
-	gint jackd_err;			/* process stderr */
-	gint jackd_ret;			/* process return */
-	guint jackd_chld;		/* GLib source id for child watch */
-	guint jackd_fd;			/* GLib source id for file watch */
-	GError* jackd_error;		/* GLib error details */
 	jack_client_t* jackd_client;	/* the jackd handle */
 	jack_status_t jackd_status;	/* the jackd status */
+	int xrun;
 } JkAppData;
 
 /* creates a JkConfig given the config file */
@@ -63,12 +54,6 @@ void jk_read_config (JkAppData* d);
 
 /* spawn application */
 gboolean jk_spawn_application(const char* cmdline);
-
-/* spawn jackd */
-gboolean jk_spawn_jackd(JkAppData* d);
-
-/* update tooltip */
-gboolean jk_update_tooltip (gpointer app_data);
 
 /* write config into file */
 void jk_write_config(JkAppData* d);

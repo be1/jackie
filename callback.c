@@ -28,6 +28,8 @@
 
 #include <unistd.h>
 #include <gtk/gtk.h>
+#include <jack/jack.h>
+#include <jack/statistics.h>
 #include "jk.h"
 #include "menu.h"
 #include "about.h"
@@ -56,41 +58,67 @@ void tray_icon_on_right_click(GtkStatusIcon* instance, guint button, guint activ
 		menu_show(GTK_MENU(d->right_menu), button, activate_time);
 }
 
+void jk_on_jackd_error(const char* msg) {
+	puts(msg);
+}
+
+void jk_on_jackd_info(const char* msg) {
+	puts(msg);
+}
+
+int jk_on_jackd_xrun(void* app_data) {
+	JkAppData* d = (JkAppData*) app_data;
+	gchar* buf = NULL;
+
+	buf = g_strdup_printf("xrun: %d. last: %.0f usecs", ++d->xrun, jack_get_xrun_delayed_usecs(d->jackd_client)); 
+	gtk_status_icon_set_tooltip (d->tray_icon, buf);
+	g_free(buf);
+	return 0;
+}
+
 /* handler for the "Start" menu item */
 void menu_item_on_start_stop(GtkMenuItem* instance, gpointer app_data)
 {
 	JkAppData* d = (JkAppData*) app_data;
-	gboolean ret;
+	static GtkWidget* img = NULL;
 
 	/* check if jackd is running */
 	if (d->jackd_client) { /* stop jackd */
 		jack_client_close(d->jackd_client);
 		d->jackd_client = NULL;
-		if (d->jackd_pid) {
-			kill (d->jackd_pid, 2); /* SIGINT */
-			d->jackd_pid = (GPid)0;
+		gtk_status_icon_set_tooltip(d->tray_icon, "Disconnected");
+		if (img) {
+			gtk_widget_destroy(img);
+			img = NULL;
 		}
-		gtk_status_icon_set_tooltip(d->tray_icon, "Jackd Stopped");
-		gtk_menu_item_set_label(instance, "Start");
+		img = gtk_image_new_from_stock(GTK_STOCK_CONNECT, GTK_ICON_SIZE_MENU);
+		gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(instance), img);
+		gtk_menu_item_set_label(instance, "gtk-connect");
+		gtk_image_menu_item_set_use_stock(GTK_IMAGE_MENU_ITEM(instance), TRUE);
 		return;
 	}
 
 	/* else reload config then start jackd */
-	jk_read_config(d);
-	if (!d->jackd_cmdline) { /* jackd group not found */
-		gtk_status_icon_set_tooltip(d->tray_icon, "Missing jackd in configuration");
-		return;
-	}
-	ret = jk_spawn_jackd(d); /* start jackd */
-	/* try to connect an existing jackd */
-	d->jackd_client = jack_client_open("jackie", JackNoStartServer, &d->jackd_status);
+	d->jackd_client = jack_client_open("jackie", JackNullOption, &d->jackd_status);
 
-	if (!d->jackd_client) { /* assume bad commandline */
-		gtk_status_icon_set_tooltip(d->tray_icon, "Bad jackd command line");
-		d->jackd_pid = (GPid)0;
+	if (!d->jackd_client) {
+		gtk_status_icon_set_tooltip(d->tray_icon, "Could not connect or start Jackd");
 	} else {
-		gtk_status_icon_set_tooltip(d->tray_icon, "Jackd started");
-		gtk_menu_item_set_label(instance, "Stop");
+		/* set info/error callbacks */
+		jack_set_error_function(jk_on_jackd_error);
+		jack_set_info_function(jk_on_jackd_info);
+		jack_set_xrun_callback(d->jackd_client, jk_on_jackd_xrun, app_data);
+		jack_activate(d->jackd_client);
+
+		gtk_status_icon_set_tooltip(d->tray_icon, "Connected");
+		if (img) {
+			gtk_widget_destroy(img);
+			img = NULL;
+		}
+		img = gtk_image_new_from_stock(GTK_STOCK_DISCONNECT, GTK_ICON_SIZE_MENU);
+		gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(instance), img);
+		gtk_menu_item_set_label(instance, "gtk-disconnect");
+		gtk_image_menu_item_set_use_stock(GTK_IMAGE_MENU_ITEM(instance), TRUE);
 	}
 }
 
@@ -143,12 +171,14 @@ void on_pref_close (gpointer app_data) {
 	JkAppData* d = (JkAppData*)app_data;
 	const gchar* text;
 
-	text = gtk_entry_get_text(d->jackd_entry);
-	g_free(d->jackd_cmdline);
-	d->jackd_cmdline = g_strdup(text); /* set jackd command line */
 	text = gtk_entry_get_text(d->patchbay_entry);
 	g_free(d->patchbay_cmdline);
 	d->patchbay_cmdline = g_strdup(text); /* set patchbay command line */
+	
+	text = gtk_entry_get_text(d->transport_entry);
+	g_free(d->transport_cmdline);
+	d->transport_cmdline = g_strdup(text); /* set transport command line */
+	
 	/* write it to $HOME/.jackie */
 	jk_write_config(d);
 	gtk_widget_hide(GTK_WIDGET(d->pref_window));
@@ -161,7 +191,7 @@ void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data) {
 	GtkVBox* vbox;
 	GtkHBox* hbox1;
 	GtkHBox* hbox2;
-	GtkLabel* jackd_label;
+	GtkLabel* transport_label;
 	GtkLabel* patchbay_label;
 
 	d->pref_window = window_create("Preferences");
@@ -174,17 +204,17 @@ void menu_item_on_pref(GtkMenuItem* instance, gpointer app_data) {
 	hbox2 = GTK_HBOX(gtk_hbox_new(TRUE, 0));
 	gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(hbox2), TRUE, FALSE, 0);
 
-	jackd_label = GTK_LABEL(gtk_label_new("Jackd command line"));
-	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(jackd_label), FALSE, FALSE, 0);
 	patchbay_label = GTK_LABEL(gtk_label_new("patchbay command line"));
-	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(patchbay_label), FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(patchbay_label), FALSE, FALSE, 0);
+	transport_label = GTK_LABEL(gtk_label_new("transport command line"));
+	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(transport_label), FALSE, FALSE, 0);
 
-	d->jackd_entry = GTK_ENTRY(gtk_entry_new());
-	gtk_entry_set_text(d->jackd_entry, d->jackd_cmdline); /* jackd command line */
-	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(d->jackd_entry), FALSE, FALSE, 0);
 	d->patchbay_entry = GTK_ENTRY(gtk_entry_new());
 	gtk_entry_set_text(d->patchbay_entry, d->patchbay_cmdline); /* patchbay command line */
-	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(d->patchbay_entry), FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox1), GTK_WIDGET(d->patchbay_entry), FALSE, FALSE, 0);
+	d->transport_entry = GTK_ENTRY(gtk_entry_new());
+	gtk_entry_set_text(d->transport_entry, d->transport_cmdline); /* transport command line */
+	gtk_box_pack_start(GTK_BOX(hbox2), GTK_WIDGET(d->transport_entry), FALSE, FALSE, 0);
 	
 	g_signal_connect_swapped(G_OBJECT(d->pref_window), "delete-event", G_CALLBACK(on_pref_close), (gpointer)d);
 

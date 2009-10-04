@@ -2,7 +2,7 @@
 #define VERSION_H
 
 #define PROG_NAME "Jackie"
-#define PROG_VERSION "0.3"
+#define PROG_VERSION "0.4"
 #define PROG_AUTHOR0 "Benoît Rouits"
 #define PROG_COPYRIGHT "Copyright © 2009 Benoît Rouits <brouits@free.fr>"
 #define PROG_WEBSITE "http://brouits.free.fr/jackie/"
