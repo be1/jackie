@@ -1,6 +1,6 @@
 PRGNAME=jackie
 PRGTITLE=Jackie
-VERSION=0.8
+VERSION=0.5
 PREFIX=/usr/local
 OBJ=main.o jk.o menu.o about.o callback.o window.o
 MO=fr_FR.mo
