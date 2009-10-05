@@ -8,6 +8,7 @@ url="http://brouits.free.fr/jackie"
 license=('GPL')
 groups=()
 depends=('gtk2' 'glib' 'jack-audio-connection-kit')
+optdepends=('patchage' 'cabestan')
 makedepends=('make' 'gcc' 'pkgconfig')
 provides=()
 conflicts=()

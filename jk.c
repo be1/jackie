@@ -63,7 +63,7 @@ void jk_read_config (JkAppData* d) {
 		g_free(d->patchbay_cmdline);
 		d->patchbay_cmdline = g_strdup("/usr/bin/patchage");
 		g_free(d->transport_cmdline);
-		d->transport_cmdline = g_strdup("");
+		d->transport_cmdline = g_strdup("/usr/bin/cabestan");
 		
 		jk_write_config(d);
 		g_error_free(error);
@@ -90,7 +90,7 @@ void jk_read_config (JkAppData* d) {
 	}
 	if (!d->transport_cmdline || d->transport_cmdline[0] == '\0') {
 		g_free(d->transport_cmdline);
-		d->transport_cmdline = g_strdup("");
+		d->transport_cmdline = g_strdup("/usr/bin/cabestan");
 	}
 	jk_write_config(d);
 }
