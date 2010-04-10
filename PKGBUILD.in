@@ -1,7 +1,7 @@
 # Contributor: Benoit Rouits <brouits@free.fr>
 pkgname=__PRGNAME__
 pkgver=__VERSION__
-pkgrel=1
+pkgrel=2
 pkgdesc="a mini Jackd graphical interface"
 arch=('i686' 'x86_64')
 url="http://brouits.free.fr/jackie"
